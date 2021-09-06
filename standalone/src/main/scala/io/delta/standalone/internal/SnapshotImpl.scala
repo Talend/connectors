@@ -63,8 +63,8 @@ private[internal] class SnapshotImpl(
   override def open(): CloseableIterator[RowParquetRecordJ] =
     CloseableParquetDataIterator(
       allFilesScala
-        .map(_.path)
-        .map(FileNames.absolutePath(deltaLog.dataPath, _).toString),
+        .map(v => (v.path, v.partitionValues))
+        .map({case (v1, v2) => (FileNames.absolutePath(deltaLog.dataPath, v1).toString, v2)}),
       getMetadata.getSchema,
       // the time zone ID if it exists, else null
       hadoopConf.get(StandaloneHadoopConf.PARQUET_DATA_TIME_ZONE_ID))

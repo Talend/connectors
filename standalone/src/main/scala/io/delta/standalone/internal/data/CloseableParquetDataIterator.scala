@@ -74,17 +74,25 @@ private[internal] case class CloseableParquetDataIterator(
     // More rows in current file
     if (parquetRowsIter.hasNext) return true
 
-    // No more rows in current file and no more files
-    if (!dataFilePathsIter.hasNext) {
-      close()
-      return false
+    while(true) {
+      // No more rows in current file and no more files
+      if (!dataFilePathsIter.hasNext) {
+        close()
+        return false
+      }
+
+      // No more rows in this file, but there is a next file
+      parquetRows.close()
+      parquetRows = readNextFile
+      parquetRowsIter = parquetRows.iterator
+      if(parquetRowsIter.hasNext) {
+        return true
+      }
+
+      // this is a empty parquet file, need to skip to next file if exists
     }
 
-    // No more rows in this file, but there is a next file
-    parquetRows.close()
-    parquetRows = readNextFile
-    parquetRowsIter = parquetRows.iterator
-    parquetRowsIter.hasNext
+    return false
   }
 
   /**
